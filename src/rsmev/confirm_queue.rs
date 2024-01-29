@@ -44,10 +44,13 @@ impl<T: Clone, KG: KeyGenerator> ConfirmQueue<T, KG> {
         }
     }
 
+    pub fn add_with_key(&mut self, key: KG::Key, value: T) {
+        self.container.push_back(QueueItem::new(key.clone(), value));
+    }
+
     pub fn add(&mut self, value: T) -> KG::Key {
         let key = KG::generate();
-        self.container.push_back(QueueItem::new(key.clone(), value));
-
+        self.add_with_key(key.clone(), value);
         key
     }
 
@@ -55,7 +58,7 @@ impl<T: Clone, KG: KeyGenerator> ConfirmQueue<T, KG> {
         let v = self.container.back()?;
         let mut qi = match v.taken {
             None => self.container.pop_back(),
-            Some(ttl) if ttl.elapsed() > std::time::Duration::from_millis(10) => {
+            Some(ttl) if ttl.elapsed() > std::time::Duration::from_millis(2000) => {
                 self.container.pop_back()
             }
             _ => None,
