@@ -6,7 +6,7 @@ use axum::{
     routing::get,
     Router,
 };
-use std::{collections::VecDeque, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 pub use tokio::{net::TcpListener, sync::mpsc};
 

@@ -98,10 +98,10 @@ mod tests {
         let _ = queue.add("random".to_string());
         let _ = queue.add("string".to_string());
 
-        let (k1, v1) = queue.take().unwrap();
+        let _ = queue.take().unwrap();
         std::thread::sleep(std::time::Duration::from_millis(10));
 
-        let (k2, v2) = queue.take().unwrap();
+        let (_, v2) = queue.take().unwrap();
         assert_eq!("random", v2);
 
         assert_eq!("string", queue.take().unwrap().1);
@@ -121,7 +121,7 @@ mod tests {
         queue.confirm(&k1);
         std::thread::sleep(std::time::Duration::from_millis(10));
 
-        let (k2, v2) = queue.take().unwrap();
+        let (_, v2) = queue.take().unwrap();
         assert_eq!("random", v2);
     }
 }
