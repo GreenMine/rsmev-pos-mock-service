@@ -5,7 +5,6 @@ use pos::Pos;
 pub use service::Service;
 
 use tokio::net::TcpListener;
-use tracing_subscriber;
 
 #[tokio::main]
 async fn main() {
