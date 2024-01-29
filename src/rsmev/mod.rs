@@ -1,4 +1,11 @@
-use axum::{extract::State, routing::get, Router};
+mod confirm_queue;
+use confirm_queue::ConfirmQueue;
+
+use axum::{
+    extract::{Path, State},
+    routing::get,
+    Router,
+};
 use std::{collections::VecDeque, sync::Arc};
 use tokio::sync::Mutex;
 pub use tokio::{net::TcpListener, sync::mpsc};
@@ -19,7 +26,8 @@ type RsmevState<S> = State<Arc<Rsmev<S>>>;
 async fn send_request<S: Service>(State(state): RsmevState<S>) -> String {
     state.push_task("asdf".to_string()).await;
 
-    "Ok".to_string()
+    let uuid = uuid::Uuid::new_v4();
+    uuid.to_string()
 }
 
 async fn get_request<S: Service>(State(state): RsmevState<S>) -> String {
