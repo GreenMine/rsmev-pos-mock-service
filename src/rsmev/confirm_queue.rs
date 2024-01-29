@@ -33,11 +33,11 @@ impl<K, V> QueueItem<K, V> {
 }
 
 // TODO: LinkedList
-pub struct ConfirmQueue<T, KG: KeyGenerator = UuidKey> {
+pub struct ConfirmQueue<T, const TTL: u64, KG: KeyGenerator = UuidKey> {
     container: VecDeque<QueueItem<KG::Key, T>>,
 }
 
-impl<T: Clone, KG: KeyGenerator> ConfirmQueue<T, KG> {
+impl<T: Clone, const TTL: u64, KG: KeyGenerator> ConfirmQueue<T, TTL, KG> {
     pub const fn new() -> Self {
         Self {
             container: VecDeque::new(),
@@ -58,7 +58,7 @@ impl<T: Clone, KG: KeyGenerator> ConfirmQueue<T, KG> {
         let v = self.container.back()?;
         let mut qi = match v.taken {
             None => self.container.pop_back(),
-            Some(ttl) if ttl.elapsed() > std::time::Duration::from_millis(2000) => {
+            Some(ttl) if ttl.elapsed() > std::time::Duration::from_millis(TTL) => {
                 self.container.pop_back()
             }
             _ => None,
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     pub fn test_fifo() {
-        let mut queue = ConfirmQueue::<String>::new();
+        let mut queue = ConfirmQueue::<String, 10>::new();
 
         let _ = queue.add("random".to_string());
         let _ = queue.add("string".to_string());
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     pub fn test_not_confirm() {
-        let mut queue = ConfirmQueue::<String>::new();
+        let mut queue = ConfirmQueue::<String, 10>::new();
 
         let _ = queue.add("random".to_string());
         let _ = queue.add("string".to_string());
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     pub fn test_confirm() {
-        let mut queue = ConfirmQueue::<String>::new();
+        let mut queue = ConfirmQueue::<String, 10>::new();
 
         let _ = queue.add("random".to_string());
         let _ = queue.add("string".to_string());

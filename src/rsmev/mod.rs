@@ -14,6 +14,8 @@ use crate::Service;
 
 use self::confirm_queue::{KeyGenerator, UuidKey};
 
+const QUEUE_TTL: u64 = 1 * 10 * 1000;
+
 pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error> {
     let state = Arc::new(Rsmev::new(service));
 
@@ -47,7 +49,7 @@ struct Rsmev<S> {
     service: Arc<S>,
     requests_sender: mpsc::Sender<(String, String)>,
 
-    queue: Arc<Mutex<ConfirmQueue<String>>>,
+    queue: Arc<Mutex<ConfirmQueue<String, QUEUE_TTL>>>,
 }
 
 impl<S: Service> Rsmev<S> {
