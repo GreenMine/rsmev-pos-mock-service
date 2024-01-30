@@ -58,7 +58,7 @@ impl<T: Clone, const TTL: u64, KG: KeyGenerator> ConfirmQueue<T, TTL, KG> {
         let v = self.container.back()?;
         let mut qi = match v.taken {
             None => self.container.pop_back(),
-            Some(ttl) if ttl.elapsed() > std::time::Duration::from_millis(TTL) => {
+            Some(ttl) if ttl.elapsed() >= std::time::Duration::from_millis(TTL) => {
                 self.container.pop_back()
             }
             _ => None,
