@@ -8,7 +8,6 @@ pub trait KeyGenerator {
 
 pub struct UuidKey;
 impl KeyGenerator for UuidKey {
-    // TODO: uuid type
     type Key = uuid::Uuid;
 
     fn generate() -> Self::Key {
