@@ -1,7 +1,8 @@
-pub use dashmap::DashMap;
-
 mod client;
 use client::Client;
+
+mod extractor;
+use extractor::HeaderNodeId;
 
 use axum::{
     extract::{Path, State},
@@ -11,6 +12,8 @@ use axum::{
 use std::sync::Arc;
 pub use tokio::net::TcpListener;
 use uuid::Uuid;
+
+use dashmap::DashMap;
 
 use crate::Service;
 
@@ -32,9 +35,11 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
 async fn send_request<S: Service>(
+    HeaderNodeId(node_id): HeaderNodeId,
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
 ) -> String {
+    tracing::info!("Node id: {:?}", node_id);
     let task_id = state.push_task(entrypoint_id, "asdf".to_string()).await;
 
     task_id.to_string()
