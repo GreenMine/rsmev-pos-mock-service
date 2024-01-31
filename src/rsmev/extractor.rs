@@ -5,7 +5,7 @@ use axum::{
 };
 
 const NODE_ID_HEADER_NAME: &'static str = "node_id";
-pub struct HeaderNodeId(pub String);
+pub struct HeaderNodeId(pub Option<String>);
 
 #[async_trait]
 impl<S> FromRequestParts<S> for HeaderNodeId
@@ -19,9 +19,9 @@ where
             let value = header
                 .to_str()
                 .map_err(|_| (StatusCode::BAD_REQUEST, "`node_id` header is not a string"))?;
-            Ok(HeaderNodeId(value.to_string()))
+            Ok(HeaderNodeId(Some(value.to_string())))
         } else {
-            Err((StatusCode::BAD_REQUEST, "`node_id` header is missing"))
+            Ok(HeaderNodeId(None))
         }
     }
 }
