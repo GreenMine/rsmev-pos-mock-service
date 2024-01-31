@@ -45,7 +45,7 @@ impl<T: Clone, const TTL: u64, KG: KeyGenerator> ConfirmQueue<T, TTL, KG> {
     }
 
     pub fn add_with_key(&mut self, key: KG::Key, value: T) {
-        self.container.push_back(QueueItem::new(key.clone(), value));
+        self.container.push_back(QueueItem::new(key, value));
     }
 
     #[allow(unused)]
