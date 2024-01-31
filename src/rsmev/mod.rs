@@ -9,12 +9,11 @@ use axum::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 pub use tokio::{net::TcpListener, sync::mpsc};
+use uuid::Uuid;
 
 use crate::Service;
 
 use self::confirm_queue::{KeyGenerator, UuidKey};
-
-const QUEUE_TTL: u64 = 1 * 10 * 1000;
 
 pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error> {
     let state = Arc::new(Rsmev::new(service));
@@ -29,7 +28,9 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
 async fn send_request<S: Service>(State(state): RsmevState<S>) -> String {
-    state.push_task("asdf".to_string()).await
+    let task_id = state.push_task("asdf".to_string()).await;
+
+    task_id.to_string()
 }
 
 async fn get_request<S: Service>(State(state): RsmevState<S>) -> String {
@@ -40,14 +41,17 @@ async fn confirm_request<S: Service>(
     State(state): RsmevState<S>,
     Path(request_id): Path<String>,
 ) -> String {
-    state.confirm_task(request_id).await;
+    state
+        .confirm_task(Uuid::parse_str(&request_id).unwrap())
+        .await;
 
     "Ok".to_string()
 }
 
+const QUEUE_TTL: u64 = 1 * 10 * 1000;
 struct Rsmev<S> {
     service: Arc<S>,
-    requests_sender: mpsc::Sender<(String, String)>,
+    requests_sender: mpsc::Sender<(Uuid, String)>,
 
     queue: Arc<Mutex<ConfirmQueue<String, QUEUE_TTL>>>,
 }
@@ -57,10 +61,8 @@ impl<S: Service> Rsmev<S> {
         let queue = Arc::new(Mutex::new(ConfirmQueue::new()));
         let service = Arc::new(service);
 
-        let (sender, mut receiver): (
-            mpsc::Sender<(String, String)>,
-            mpsc::Receiver<(String, String)>,
-        ) = mpsc::channel(1024);
+        let (sender, mut receiver): (mpsc::Sender<(Uuid, String)>, mpsc::Receiver<(Uuid, String)>) =
+            mpsc::channel(1024);
         tokio::spawn({
             let q = queue.clone();
             let s = service.clone();
@@ -79,7 +81,7 @@ impl<S: Service> Rsmev<S> {
         }
     }
 
-    pub async fn push_task(&self, task: String) -> String {
+    pub async fn push_task(&self, task: String) -> Uuid {
         let key = UuidKey::generate();
         self.requests_sender
             .send((key.clone(), task))
@@ -93,7 +95,7 @@ impl<S: Service> Rsmev<S> {
         self.queue.lock().await.take().map(|i| i.1.clone())
     }
 
-    pub async fn confirm_task(&self, key: String) {
+    pub async fn confirm_task(&self, key: Uuid) {
         self.queue.lock().await.confirm(&key);
     }
 }
