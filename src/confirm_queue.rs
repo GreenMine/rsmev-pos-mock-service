@@ -8,11 +8,10 @@ pub trait KeyGenerator {
 
 pub struct UuidKey;
 impl KeyGenerator for UuidKey {
-    // TODO: uuid type
-    type Key = String;
+    type Key = uuid::Uuid;
 
     fn generate() -> Self::Key {
-        uuid::Uuid::new_v4().to_string()
+        uuid::Uuid::new_v4()
     }
 }
 
@@ -32,7 +31,7 @@ impl<K, V> QueueItem<K, V> {
     }
 }
 
-// TODO: LinkedList
+// TODO: two VecDeque(one for not taken, one for taken)
 pub struct ConfirmQueue<T, const TTL: u64, KG: KeyGenerator = UuidKey> {
     container: VecDeque<QueueItem<KG::Key, T>>,
 }
@@ -45,9 +44,10 @@ impl<T: Clone, const TTL: u64, KG: KeyGenerator> ConfirmQueue<T, TTL, KG> {
     }
 
     pub fn add_with_key(&mut self, key: KG::Key, value: T) {
-        self.container.push_back(QueueItem::new(key.clone(), value));
+        self.container.push_back(QueueItem::new(key, value));
     }
 
+    #[allow(unused)]
     pub fn add(&mut self, value: T) -> KG::Key {
         let key = KG::generate();
         self.add_with_key(key.clone(), value);

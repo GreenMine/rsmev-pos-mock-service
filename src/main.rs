@@ -1,3 +1,4 @@
+pub mod confirm_queue;
 mod pos;
 mod rsmev;
 mod service;
