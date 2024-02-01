@@ -35,12 +35,13 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
 async fn send_request<S: Service>(
-    HeaderNodeId(node_id): HeaderNodeId,
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
+    HeaderNodeId(node_id): HeaderNodeId,
 ) -> String {
-    tracing::info!("Node id: {:?}", node_id);
-    let task_id = state.push_task(entrypoint_id, "asdf".to_string()).await;
+    let task_id = state
+        .push_task(entrypoint_id, node_id, "asdf".to_string())
+        .await;
 
     task_id.to_string()
 }
@@ -48,9 +49,10 @@ async fn send_request<S: Service>(
 async fn get_request<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
+    HeaderNodeId(node_id): HeaderNodeId,
 ) -> String {
     state
-        .pop_task(entrypoint_id)
+        .pop_task(entrypoint_id, node_id)
         .await
         .unwrap_or("None".to_string())
 }
@@ -58,8 +60,9 @@ async fn get_request<S: Service>(
 async fn confirm_request<S: Service>(
     State(state): RsmevState<S>,
     Path((entrypoint_id, request_id)): Path<(Uuid, Uuid)>,
+    HeaderNodeId(node_id): HeaderNodeId,
 ) -> String {
-    state.confirm_task(entrypoint_id, request_id).await;
+    state.confirm_task(entrypoint_id, node_id, request_id).await;
 
     "Ok".to_string()
 }
@@ -77,17 +80,29 @@ impl<S: Service> Rsmev<S> {
         }
     }
 
-    pub async fn push_task(&self, entrypoint_id: Uuid, request: Request) -> Uuid {
-        self.get_client(entrypoint_id).push_task(request).await
-    }
-
-    pub async fn pop_task(&self, entrypoint_id: Uuid) -> Option<Response> {
-        self.get_client(entrypoint_id).pop_task().await
-    }
-
-    pub async fn confirm_task(&self, entrypoint_id: Uuid, request_id: Uuid) {
+    pub async fn push_task(
+        &self,
+        entrypoint_id: Uuid,
+        node_id: Option<String>,
+        request: Request,
+    ) -> Uuid {
         self.get_client(entrypoint_id)
-            .confirm_task(&request_id)
+            .push_task(node_id, request)
+            .await
+    }
+
+    pub async fn pop_task(&self, entrypoint_id: Uuid, node_id: Option<String>) -> Option<Response> {
+        self.get_client(entrypoint_id).pop_task(node_id).await
+    }
+
+    pub async fn confirm_task(
+        &self,
+        entrypoint_id: Uuid,
+        node_id: Option<String>,
+        request_id: Uuid,
+    ) {
+        self.get_client(entrypoint_id)
+            .confirm_task(node_id, &request_id)
             .await;
     }
 
