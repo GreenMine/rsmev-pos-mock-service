@@ -1,10 +1,8 @@
 pub mod confirm_queue;
 mod pos;
 mod rsmev;
-mod service;
+pub mod service;
 use pos::Pos;
-pub use service::Service;
-
 use tokio::net::TcpListener;
 
 #[tokio::main]

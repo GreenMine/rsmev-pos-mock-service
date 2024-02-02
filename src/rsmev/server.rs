@@ -1,5 +1,6 @@
 use axum::{
     extract::{Path, State},
+    response::IntoResponse,
     routing::get,
     Router,
 };
@@ -9,10 +10,14 @@ use uuid::Uuid;
 
 use dashmap::DashMap;
 
-use super::{client::Client, extractor::HeaderNodeId, Request, Response};
-use crate::Service;
+use super::{client::Client, extractor::HeaderNodeId, Request};
+use crate::service::{Result as ServiceResult, Service};
 
-pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error> {
+pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error>
+where
+    <S as Service>::Error: IntoResponse,
+    <S as Service>::Response: IntoResponse,
+{
     let state = Arc::new(Rsmev::new(service));
 
     let rsmev_routes = Router::new()
@@ -42,11 +47,8 @@ async fn get_request<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
-) -> String {
-    state
-        .pop_task(entrypoint_id, node_id)
-        .await
-        .unwrap_or("None".to_string())
+) -> ServiceResult<S> {
+    state.pop_task(entrypoint_id, node_id).await.unwrap()
 }
 
 async fn confirm_request<S: Service>(
@@ -59,9 +61,9 @@ async fn confirm_request<S: Service>(
     "Ok".to_string()
 }
 
-struct Rsmev<S> {
+struct Rsmev<S: Service> {
     service: Arc<S>,
-    clients: DashMap<Uuid, Client>,
+    clients: DashMap<Uuid, Client<S>>,
 }
 
 impl<S: Service> Rsmev<S> {
@@ -83,7 +85,11 @@ impl<S: Service> Rsmev<S> {
             .await
     }
 
-    pub async fn pop_task(&self, entrypoint_id: Uuid, node_id: Option<String>) -> Option<Response> {
+    pub async fn pop_task(
+        &self,
+        entrypoint_id: Uuid,
+        node_id: Option<String>,
+    ) -> Option<crate::service::Result<S>> {
         self.get_client(entrypoint_id).pop_task(node_id).await
     }
 
@@ -101,7 +107,7 @@ impl<S: Service> Rsmev<S> {
     pub fn get_client(
         &self,
         entrypoint_id: Uuid,
-    ) -> dashmap::mapref::one::RefMut<'_, Uuid, Client> {
+    ) -> dashmap::mapref::one::RefMut<'_, Uuid, Client<S>> {
         self.clients
             .entry(entrypoint_id)
             .or_insert(Client::new(self.service.clone()))

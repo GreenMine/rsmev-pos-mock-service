@@ -1,4 +1,7 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::{
+    convert::Infallible,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 pub struct Pos {
     i: AtomicUsize,
@@ -16,10 +19,13 @@ impl Pos {
     }
 }
 
-impl crate::Service for Pos {
-    async fn handle(&self, _content: &str) -> String {
+impl crate::service::Service for Pos {
+    type Error = Infallible;
+    type Response = String;
+
+    async fn handle(&self, _content: crate::rsmev::Request) -> crate::service::Result<Self> {
         tokio::time::sleep(std::time::Duration::from_millis(2500)).await;
 
-        format!("pos{}", self.next())
+        Ok(format!("pos{}", self.next()))
     }
 }

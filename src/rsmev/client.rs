@@ -3,28 +3,30 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-use crate::Service;
+use crate::service::{Result as ServiceResult, Service};
 
-use super::{Request, Response};
+use super::Request;
 use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
 use dashmap::DashMap;
 
 type ChannelTransferType = (Option<NodeId>, Uuid, Request);
-type Queue = ConfirmQueue<Response, QUEUE_TTL, UuidKey>;
+type Queue<T> = ConfirmQueue<T, QUEUE_TTL, UuidKey>;
 type QueueKey = Uuid;
+
+type ServiceNodes<S> = Nodes<ServiceResult<S>>;
 
 const CHANNEL_BUFFER_SIZE: usize = 256;
 const QUEUE_TTL: u64 = 1 * 10 * 1000;
 
-pub struct Client {
-    nodes: Arc<Nodes>,
+pub struct Client<S: Service> {
+    nodes: Arc<ServiceNodes<S>>,
     tx: mpsc::Sender<ChannelTransferType>,
 }
 
 const BASE_NODE_ID: &'static str = "master";
 
-impl Client {
-    pub fn new<S: Service>(service: Arc<S>) -> Self {
+impl<S: Service> Client<S> {
+    pub fn new(service: Arc<S>) -> Self {
         let (tx, rx) = mpsc::channel(CHANNEL_BUFFER_SIZE);
         let nodes = Arc::new(Nodes::new());
 
@@ -40,7 +42,7 @@ impl Client {
         key
     }
 
-    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<Response> {
+    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<ServiceResult<S>> {
         self.nodes.node(node_id).take().map(|qi| qi.1.clone())
     }
 
@@ -48,14 +50,14 @@ impl Client {
         self.nodes.node(node_id).confirm(task_id);
     }
 
-    fn spawn_handler<S: Service>(
+    fn spawn_handler(
         service: Arc<S>,
-        nodes: Arc<Nodes>,
+        nodes: Arc<ServiceNodes<S>>,
         mut rx: mpsc::Receiver<ChannelTransferType>,
     ) {
         tokio::spawn(async move {
             while let Some((node_id, key, request)) = rx.recv().await {
-                let response = service.handle(&request).await;
+                let response = service.handle(request).await;
                 nodes.node(node_id).add_with_key(key, response);
             }
         });
@@ -63,18 +65,18 @@ impl Client {
 }
 
 type NodeId = String;
-struct Nodes {
-    inner: DashMap<NodeId, Queue>,
+struct Nodes<T> {
+    inner: DashMap<NodeId, Queue<T>>,
 }
 
-impl Nodes {
+impl<T: Clone> Nodes<T> {
     pub fn new() -> Self {
         Nodes {
             inner: DashMap::new(),
         }
     }
 
-    pub fn node(&self, name: Option<String>) -> dashmap::mapref::one::RefMut<'_, NodeId, Queue> {
+    pub fn node(&self, name: Option<String>) -> dashmap::mapref::one::RefMut<'_, NodeId, Queue<T>> {
         self.inner
             .entry(name.unwrap_or(BASE_NODE_ID.to_string()))
             .or_insert(Queue::new())
