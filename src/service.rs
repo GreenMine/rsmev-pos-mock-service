@@ -21,7 +21,7 @@ impl<'de, C: serde::Deserialize<'de>> Message<C> {
 
 // TODO: maybe just add a associated type Response(which may be a result, if it can be failed)
 pub trait Service: Send + Sync + 'static {
-    type Request: serde::de::DeserializeOwned + Clone + Send + Sync + std::fmt::Debug;
+    type Request: serde::de::DeserializeOwned + Send;
     type Response: serde::Serialize + Clone + Send + Sync;
     type Error: std::error::Error + Clone + Send + Sync;
 
