@@ -31,16 +31,24 @@ struct SendRequest {
     body: Body,
 }
 
+#[derive(serde::Serialize)]
+struct SendResponse {
+    #[serde(rename = "requestId")]
+    request_id: Uuid,
+}
+
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
 async fn send_request<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
     Json(request): Json<SendRequest>,
-) -> String {
+) -> Json<SendResponse> {
     let task_id = state.push_task(entrypoint_id, node_id, request.body).await;
 
-    task_id.to_string()
+    Json(SendResponse {
+        request_id: task_id,
+    })
 }
 
 async fn get_request<S: Service>(
