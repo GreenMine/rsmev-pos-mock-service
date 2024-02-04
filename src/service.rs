@@ -1,13 +1,14 @@
 use std::fs::File;
+use std::future::Future;
 
-use crate::rsmev::Body as RsmevBody;
+use crate::rsmev::body::{Body as RsmevBody, EncodedXml};
 
-pub type Result<S> = std::result::Result<<S as Service>::Response, <S as Service>::Error>;
+pub type Result<S> = std::result::Result<RsmevBody, <S as Service>::Error>;
 
 #[derive(Debug)]
 pub struct Message<C> {
-    content: C,
-    files: Vec<File>,
+    pub content: C,
+    pub files: Vec<File>,
 }
 
 impl<'de, C: serde::Deserialize<'de>> Message<C> {
@@ -19,19 +20,28 @@ impl<'de, C: serde::Deserialize<'de>> Message<C> {
     }
 }
 
+impl<C: serde::Serialize> Message<C> {
+    pub fn to_rsmev_body(self) -> RsmevBody {
+        RsmevBody {
+            xml: EncodedXml::serialize(&self.content).unwrap(),
+            files: Vec::new(),
+        }
+    }
+}
+
 // TODO: maybe just add a associated type Response(which may be a result, if it can be failed)
 pub trait Service: Send + Sync + 'static {
     type Request: serde::de::DeserializeOwned + Send;
     type Response: serde::Serialize + Clone + Send + Sync;
     type Error: std::error::Error + Clone + Send + Sync;
 
-    fn process(
-        &self,
-        message: RsmevBody,
-    ) -> impl std::future::Future<Output = Result<Self>> + Send {
-        let content = Self::parse(message);
+    fn process(&self, message: RsmevBody) -> impl Future<Output = Result<Self>> + Send {
+        async {
+            let content = Self::parse(message);
+            let response = self.handle(content).await;
 
-        self.handle(content)
+            response.map(Message::to_rsmev_body)
+        }
     }
 
     fn parse(message: RsmevBody) -> Message<Self::Request> {
@@ -40,5 +50,5 @@ pub trait Service: Send + Sync + 'static {
     fn handle(
         &self,
         content: Message<Self::Request>,
-    ) -> impl std::future::Future<Output = Result<Self>> + Send;
+    ) -> impl Future<Output = std::result::Result<Message<Self::Response>, Self::Error>> + Send;
 }

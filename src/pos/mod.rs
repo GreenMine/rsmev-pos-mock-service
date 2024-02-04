@@ -5,6 +5,8 @@ use std::{
 
 use crate::service::{Message, Service};
 
+use serde::{Deserialize, Serialize};
+
 pub struct Pos {
     i: AtomicUsize,
 }
@@ -22,7 +24,7 @@ impl Pos {
 }
 
 // TODO: error was: can't leak private type
-#[derive(Debug, serde::Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct PosRequest {
     #[serde(rename = "@one")]
     one: String,
@@ -31,16 +33,34 @@ pub struct PosRequest {
     two: String,
 }
 
+#[derive(Serialize, Clone)]
+pub struct PosResponse {
+    #[serde(rename = "$text")]
+    response: String,
+
+    #[serde(rename = "@status")]
+    status: i32,
+}
+
 impl Service for Pos {
     type Request = PosRequest;
-    type Response = String;
+    type Response = PosResponse;
     type Error = Infallible;
 
-    async fn handle(&self, content: Message<Self::Request>) -> crate::service::Result<Self> {
+    async fn handle(
+        &self,
+        content: Message<Self::Request>,
+    ) -> Result<Message<Self::Response>, Self::Error> {
         tokio::time::sleep(std::time::Duration::from_millis(2500)).await;
 
         println!("Content: {:?}", content);
 
-        Ok(format!("pos{}", self.next()))
+        Ok(Message {
+            content: PosResponse {
+                response: "ALL FINE".to_string(),
+                status: 200,
+            },
+            files: Vec::new(),
+        })
     }
 }

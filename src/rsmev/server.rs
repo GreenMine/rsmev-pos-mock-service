@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::{client::Client, extractor::HeaderNodeId, Body};
+use super::{body::Body, client::Client, extractor::HeaderNodeId};
 use crate::service::Service;
 
 use axum::{
@@ -17,7 +17,7 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 
     let rsmev_routes = Router::new()
         .route("/send", get(send_request))
-        .route("/get", get(get_request))
+        .route("/get", get(get_response))
         .route("/confirm/:request_id", get(confirm_request))
         .with_state(state);
 
@@ -51,13 +51,29 @@ async fn send_request<S: Service>(
     })
 }
 
-async fn get_request<S: Service>(
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GetResponse {
+    rec_id: Uuid,
+    request_id: Uuid,
+    message_id: Uuid,
+    #[serde(flatten)]
+    body: Body,
+}
+
+async fn get_response<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
-) -> String {
-    let _ = state.pop_task(entrypoint_id, node_id).await.unwrap();
-    "Response".to_string()
+) -> Json<GetResponse> {
+    let r = state.pop_task(entrypoint_id, node_id).await.unwrap();
+
+    Json(GetResponse {
+        rec_id: Uuid::new_v4(),
+        request_id: Uuid::new_v4(),
+        message_id: Uuid::new_v4(),
+        body: r.unwrap(),
+    })
 }
 
 async fn confirm_request<S: Service>(

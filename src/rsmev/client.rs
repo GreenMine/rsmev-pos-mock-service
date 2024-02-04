@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::Body;
+use super::body::Body;
 use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
 use crate::service::{Result as ServiceResult, Service};
 
@@ -42,7 +42,10 @@ impl<S: Service> Client<S> {
     }
 
     pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<ServiceResult<S>> {
-        self.nodes.node(node_id).take().map(|qi| qi.1.clone())
+        self.nodes
+            .node(node_id)
+            .take()
+            .map(|qi| Clone::clone(&*qi.1))
     }
 
     pub async fn confirm_task(&self, node_id: Option<NodeId>, task_id: &QueueKey) {

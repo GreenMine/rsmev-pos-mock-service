@@ -1,21 +1,21 @@
 use base64::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-struct File {
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct File {
     name: String,
     url: String,
     #[serde(rename = "signaturePKCS7")]
     signature: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Body {
     pub xml: EncodedXml,
     pub files: Vec<File>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(transparent)]
 pub struct EncodedXml {
     content: String,
@@ -38,7 +38,7 @@ impl EncodedXml {
         T::deserialize(&mut deserializer).map_err(|_| Error)
     }
 
-    pub fn serialize<T: Serialize>(content: &str) -> Result<Self, Error> {
+    pub fn serialize<T: Serialize>(content: &T) -> Result<Self, Error> {
         let serialized = quick_xml::se::to_string(content).map_err(|_| Error)?;
 
         Ok(Self::new(BASE64_STANDARD.encode(&serialized)))
