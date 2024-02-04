@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::rsmev::Message as RsmevMessage;
+use crate::rsmev::Body as RsmevBody;
 
 pub type Result<S> = std::result::Result<<S as Service>::Response, <S as Service>::Error>;
 
@@ -11,9 +11,9 @@ pub struct Message<C> {
 }
 
 impl<'de, C: serde::Deserialize<'de>> Message<C> {
-    pub fn from_rsmev(message: RsmevMessage) -> Self {
+    pub fn from_rsmev_body(body: RsmevBody) -> Self {
         Self {
-            content: message.xml.deserialize().unwrap(),
+            content: body.xml.deserialize().unwrap(),
             files: Vec::new(),
         }
     }
@@ -27,15 +27,15 @@ pub trait Service: Send + Sync + 'static {
 
     fn process(
         &self,
-        message: RsmevMessage,
+        message: RsmevBody,
     ) -> impl std::future::Future<Output = Result<Self>> + Send {
         let content = Self::parse(message);
 
         self.handle(content)
     }
 
-    fn parse(message: RsmevMessage) -> Message<Self::Request> {
-        Message::from_rsmev(message)
+    fn parse(message: RsmevBody) -> Message<Self::Request> {
+        Message::from_rsmev_body(message)
     }
     fn handle(
         &self,

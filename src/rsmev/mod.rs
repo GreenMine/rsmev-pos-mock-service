@@ -1,7 +1,7 @@
+mod body;
 pub(crate) mod client;
 pub(crate) mod extractor;
-mod message;
 mod server;
 
-pub use message::Message;
+pub use body::Body;
 pub use server::serve;

@@ -1,16 +1,16 @@
+use std::sync::Arc;
+
+use super::{client::Client, extractor::HeaderNodeId, Body};
+use crate::service::Service;
+
 use axum::{
     extract::{Path, State},
     routing::get,
     Json, Router,
 };
-use std::sync::Arc;
+use dashmap::DashMap;
 pub use tokio::net::TcpListener;
 use uuid::Uuid;
-
-use dashmap::DashMap;
-
-use super::{client::Client, extractor::HeaderNodeId, Message};
-use crate::service::Service;
 
 pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error> {
     let state = Arc::new(Rsmev::new(service));
@@ -28,7 +28,7 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 #[derive(serde::Deserialize, Debug)]
 struct SendRequest {
     #[serde(flatten)]
-    message: Message,
+    body: Body,
 }
 
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
@@ -38,9 +38,7 @@ async fn send_request<S: Service>(
     HeaderNodeId(node_id): HeaderNodeId,
     Json(request): Json<SendRequest>,
 ) -> String {
-    let task_id = state
-        .push_task(entrypoint_id, node_id, request.message)
-        .await;
+    let task_id = state.push_task(entrypoint_id, node_id, request.body).await;
 
     task_id.to_string()
 }
@@ -81,10 +79,10 @@ impl<S: Service> Rsmev<S> {
         &self,
         entrypoint_id: Uuid,
         node_id: Option<String>,
-        message: Message,
+        body: Body,
     ) -> Uuid {
         self.get_client(entrypoint_id)
-            .push_task(node_id, message)
+            .push_task(node_id, body)
             .await
     }
 

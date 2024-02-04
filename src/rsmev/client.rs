@@ -1,15 +1,14 @@
 use std::sync::Arc;
 
+use super::Body;
+use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
+use crate::service::{Result as ServiceResult, Service};
+
+use dashmap::DashMap;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-use crate::service::{Result as ServiceResult, Service};
-
-use super::Message;
-use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
-use dashmap::DashMap;
-
-type ChannelTransferType = (Option<NodeId>, Uuid, Message);
+type ChannelTransferType = (Option<NodeId>, Uuid, Body);
 type Queue<T> = ConfirmQueue<T, QUEUE_TTL, UuidKey>;
 type QueueKey = Uuid;
 
@@ -34,10 +33,10 @@ impl<S: Service> Client<S> {
         Self { nodes, tx }
     }
 
-    pub async fn push_task(&self, node_id: Option<NodeId>, message: Message) -> QueueKey {
+    pub async fn push_task(&self, node_id: Option<NodeId>, body: Body) -> QueueKey {
         let key = UuidKey::generate();
         // TODO: throw the error up
-        let _ = self.tx.send((node_id, key.clone(), message)).await;
+        let _ = self.tx.send((node_id, key.clone(), body)).await;
 
         key
     }

@@ -10,7 +10,7 @@ struct File {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Message {
+pub struct Body {
     pub xml: EncodedXml,
     pub files: Vec<File>,
 }
