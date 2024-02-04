@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::rsmev::{Message as RsmevMessage, Request};
+use crate::rsmev::Message as RsmevMessage;
 
 pub type Result<S> = std::result::Result<<S as Service>::Response, <S as Service>::Error>;
 

@@ -3,15 +3,13 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use base64::Engine;
 use std::sync::Arc;
 pub use tokio::net::TcpListener;
 use uuid::Uuid;
 
-use bytes::Bytes;
 use dashmap::DashMap;
 
-use super::{client::Client, extractor::HeaderNodeId, Message, Request};
+use super::{client::Client, extractor::HeaderNodeId, Message};
 use crate::service::Service;
 
 pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error> {
