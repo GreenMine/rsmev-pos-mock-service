@@ -36,7 +36,7 @@ pub struct ConfirmQueue<T, const TTL: u64, KG: KeyGenerator = UuidKey> {
     container: VecDeque<QueueItem<KG::Key, T>>,
 }
 
-impl<T: Clone, const TTL: u64, KG: KeyGenerator> ConfirmQueue<T, TTL, KG> {
+impl<T, const TTL: u64, KG: KeyGenerator> ConfirmQueue<T, TTL, KG> {
     pub const fn new() -> Self {
         Self {
             container: VecDeque::new(),

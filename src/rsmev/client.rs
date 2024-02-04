@@ -69,7 +69,7 @@ struct Nodes<T> {
     inner: DashMap<NodeId, Queue<T>>,
 }
 
-impl<T: Clone> Nodes<T> {
+impl<T> Nodes<T> {
     pub fn new() -> Self {
         Nodes {
             inner: DashMap::new(),
