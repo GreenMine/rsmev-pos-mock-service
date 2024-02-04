@@ -32,8 +32,8 @@ struct SendRequest {
 }
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct SendResponse {
-    #[serde(rename = "requestId")]
     request_id: Uuid,
 }
 
