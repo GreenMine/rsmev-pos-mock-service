@@ -28,9 +28,9 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct SendRequest<C> {
+struct SendRequest {
     #[serde(flatten)]
-    message: Message<C>,
+    message: Message,
 }
 
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
@@ -38,13 +38,11 @@ async fn send_request<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
-    Json(request): Json<SendRequest<<S as Service>::Request>>,
+    Json(request): Json<SendRequest>,
 ) -> String {
     let task_id = state
-        .push_task(entrypoint_id, node_id, "asdf".to_string())
+        .push_task(entrypoint_id, node_id, request.message)
         .await;
-
-    println!("Request: {:?}", request);
 
     task_id.to_string()
 }
@@ -85,10 +83,10 @@ impl<S: Service> Rsmev<S> {
         &self,
         entrypoint_id: Uuid,
         node_id: Option<String>,
-        request: Request,
+        message: Message,
     ) -> Uuid {
         self.get_client(entrypoint_id)
-            .push_task(node_id, request)
+            .push_task(node_id, message)
             .await
     }
 

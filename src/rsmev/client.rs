@@ -5,11 +5,11 @@ use uuid::Uuid;
 
 use crate::service::{Result as ServiceResult, Service};
 
-use super::Request;
+use super::Message;
 use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
 use dashmap::DashMap;
 
-type ChannelTransferType = (Option<NodeId>, Uuid, Request);
+type ChannelTransferType = (Option<NodeId>, Uuid, Message);
 type Queue<T> = ConfirmQueue<T, QUEUE_TTL, UuidKey>;
 type QueueKey = Uuid;
 
@@ -34,10 +34,10 @@ impl<S: Service> Client<S> {
         Self { nodes, tx }
     }
 
-    pub async fn push_task(&self, node_id: Option<NodeId>, request: Request) -> QueueKey {
+    pub async fn push_task(&self, node_id: Option<NodeId>, message: Message) -> QueueKey {
         let key = UuidKey::generate();
         // TODO: throw the error up
-        let _ = self.tx.send((node_id, key.clone(), request)).await;
+        let _ = self.tx.send((node_id, key.clone(), message)).await;
 
         key
     }
@@ -57,7 +57,7 @@ impl<S: Service> Client<S> {
     ) {
         tokio::spawn(async move {
             while let Some((node_id, key, request)) = rx.recv().await {
-                let response = service.handle(request).await;
+                let response = service.process(request).await;
                 nodes.node(node_id).add_with_key(key, response);
             }
         });

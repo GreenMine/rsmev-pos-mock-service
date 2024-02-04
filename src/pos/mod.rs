@@ -3,6 +3,8 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+use crate::service::{Message, Service};
+
 pub struct Pos {
     i: AtomicUsize,
 }
@@ -29,13 +31,15 @@ pub struct PosRequest {
     two: String,
 }
 
-impl crate::service::Service for Pos {
+impl Service for Pos {
     type Request = PosRequest;
     type Response = String;
     type Error = Infallible;
 
-    async fn handle(&self, _content: crate::rsmev::Request) -> crate::service::Result<Self> {
+    async fn handle(&self, content: Message<Self::Request>) -> crate::service::Result<Self> {
         tokio::time::sleep(std::time::Duration::from_millis(2500)).await;
+
+        println!("Content: {:?}", content);
 
         Ok(format!("pos{}", self.next()))
     }
