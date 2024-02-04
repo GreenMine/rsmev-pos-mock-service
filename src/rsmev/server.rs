@@ -1,23 +1,20 @@
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     routing::get,
-    Router,
+    Json, Router,
 };
+use base64::Engine;
 use std::sync::Arc;
 pub use tokio::net::TcpListener;
 use uuid::Uuid;
 
+use bytes::Bytes;
 use dashmap::DashMap;
 
-use super::{client::Client, extractor::HeaderNodeId, Request};
-use crate::service::{Result as ServiceResult, Service};
+use super::{client::Client, extractor::HeaderNodeId, Message, Request};
+use crate::service::Service;
 
-pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error>
-where
-    <S as Service>::Error: IntoResponse,
-    <S as Service>::Response: IntoResponse,
-{
+pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), std::io::Error> {
     let state = Arc::new(Rsmev::new(service));
 
     let rsmev_routes = Router::new()
@@ -30,15 +27,24 @@ where
     axum::serve(listener, routes).await
 }
 
+#[derive(serde::Deserialize, Debug)]
+struct SendRequest<C> {
+    #[serde(flatten)]
+    message: Message<C>,
+}
+
 type RsmevState<S> = State<Arc<Rsmev<S>>>;
 async fn send_request<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
+    Json(request): Json<SendRequest<<S as Service>::Request>>,
 ) -> String {
     let task_id = state
         .push_task(entrypoint_id, node_id, "asdf".to_string())
         .await;
+
+    println!("Request: {:?}", request);
 
     task_id.to_string()
 }
@@ -47,8 +53,9 @@ async fn get_request<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
-) -> ServiceResult<S> {
-    state.pop_task(entrypoint_id, node_id).await.unwrap()
+) -> String {
+    let _ = state.pop_task(entrypoint_id, node_id).await.unwrap();
+    "Response".to_string()
 }
 
 async fn confirm_request<S: Service>(

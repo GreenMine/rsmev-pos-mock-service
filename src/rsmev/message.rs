@@ -1,8 +1,12 @@
-use std::path::PathBuf;
-
 use serde::{Deserialize, Serialize};
 
-type File = PathBuf;
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+struct File {
+    name: String,
+    url: String,
+    #[serde(rename = "signaturePKCS7")]
+    signature: Option<String>,
+}
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Message<C> {
@@ -32,7 +36,7 @@ mod content_serde {
 
         let mut deserializer = quick_xml::de::Deserializer::from_reader(cursor);
 
-        // TODO: transform this error to another error type which can concains current deserializer
+        // TODO: transform this error to another error type which can contains current deserializer
         // error and another one(merge D::Error and quick_xml::Deserializer::Error)
         T::deserialize(&mut deserializer).map_err(serde::de::Error::custom)
     }

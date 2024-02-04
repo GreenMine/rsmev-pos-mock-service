@@ -19,9 +19,20 @@ impl Pos {
     }
 }
 
+// TODO: error was: can't leak private type
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct PosRequest {
+    #[serde(rename = "@one")]
+    one: String,
+
+    #[serde(rename = "@two")]
+    two: String,
+}
+
 impl crate::service::Service for Pos {
-    type Error = Infallible;
+    type Request = PosRequest;
     type Response = String;
+    type Error = Infallible;
 
     async fn handle(&self, _content: crate::rsmev::Request) -> crate::service::Result<Self> {
         tokio::time::sleep(std::time::Duration::from_millis(2500)).await;
