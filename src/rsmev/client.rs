@@ -41,11 +41,11 @@ impl<S: Service> Client<S> {
         key
     }
 
-    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<ServiceResult<S>> {
+    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<(Uuid, ServiceResult<S>)> {
         self.nodes
             .node(node_id)
             .take()
-            .map(|qi| Clone::clone(&*qi.1))
+            .map(|(id, result)| (id.clone(), result.clone()))
     }
 
     pub async fn confirm_task(&self, node_id: Option<NodeId>, task_id: &QueueKey) {

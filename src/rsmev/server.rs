@@ -66,13 +66,13 @@ async fn get_response<S: Service>(
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
 ) -> Json<GetResponse> {
-    let r = state.pop_task(entrypoint_id, node_id).await.unwrap();
+    let (request_id, body) = state.pop_task(entrypoint_id, node_id).await.unwrap();
 
     Json(GetResponse {
         rec_id: Uuid::new_v4(),
-        request_id: Uuid::new_v4(),
+        request_id,
         message_id: Uuid::new_v4(),
-        body: r.unwrap(),
+        body: body.unwrap(),
     })
 }
 
@@ -114,7 +114,7 @@ impl<S: Service> Rsmev<S> {
         &self,
         entrypoint_id: Uuid,
         node_id: Option<String>,
-    ) -> Option<crate::service::Result<S>> {
+    ) -> Option<(Uuid, crate::service::Result<S>)> {
         self.get_client(entrypoint_id).pop_task(node_id).await
     }
 
