@@ -69,7 +69,7 @@ async fn get_response<S: Service>(
     let (request_id, body) = state.pop_task(entrypoint_id, node_id).await.unwrap();
 
     Json(GetResponse {
-        rec_id: Uuid::new_v4(),
+        rec_id: request_id,
         request_id,
         message_id: Uuid::new_v4(),
         body: body.unwrap(),
