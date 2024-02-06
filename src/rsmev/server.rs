@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::{body::Body, client::Client, extractor::HeaderNodeId};
+use super::{body::Body, client::Client, extractor::HeaderNodeId, handler_service::HandlerService};
 use crate::service::Service;
 
 use axum::{
@@ -85,14 +85,14 @@ async fn confirm_request<S: Service>(
 }
 
 struct Rsmev<S: Service> {
-    service: Arc<S>,
+    service: Arc<HandlerService<S>>,
     clients: DashMap<Uuid, Client<S>>,
 }
 
 impl<S: Service> Rsmev<S> {
     pub fn new(service: S) -> Self {
         Self {
-            service: Arc::new(service),
+            service: Arc::new(HandlerService::new(service)),
             clients: DashMap::new(),
         }
     }
@@ -112,7 +112,7 @@ impl<S: Service> Rsmev<S> {
         &self,
         entrypoint_id: Uuid,
         node_id: Option<String>,
-    ) -> Option<(Uuid, crate::service::Result<S>)> {
+    ) -> Option<(Uuid, crate::rsmev::Result<S>)> {
         self.get_client(entrypoint_id).pop_task(node_id).await
     }
 

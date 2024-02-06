@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
 use super::body::Body;
+use super::handler_service::HandlerService;
 use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
-use crate::service::{Result as ServiceResult, Service};
+use crate::rsmev::Result;
+use crate::service::Service;
 
 use dashmap::DashMap;
 use tokio::sync::mpsc;
@@ -12,7 +14,7 @@ type ChannelTransferType = (Option<NodeId>, Uuid, Body);
 type Queue<T> = ConfirmQueue<T, QUEUE_TTL, UuidKey>;
 type QueueKey = Uuid;
 
-type ServiceNodes<S> = Nodes<ServiceResult<S>>;
+type ServiceNodes<S> = Nodes<Result<S>>;
 
 const CHANNEL_BUFFER_SIZE: usize = 256;
 const QUEUE_TTL: u64 = 1 * 10 * 1000;
@@ -25,7 +27,7 @@ pub struct Client<S: Service> {
 const BASE_NODE_ID: &'static str = "master";
 
 impl<S: Service> Client<S> {
-    pub fn new(service: Arc<S>) -> Self {
+    pub fn new(service: Arc<HandlerService<S>>) -> Self {
         let (tx, rx) = mpsc::channel(CHANNEL_BUFFER_SIZE);
         let nodes = Arc::new(Nodes::new());
 
@@ -41,7 +43,7 @@ impl<S: Service> Client<S> {
         key
     }
 
-    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<(Uuid, ServiceResult<S>)> {
+    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<(Uuid, Result<S>)> {
         self.nodes
             .node(node_id)
             .take()
@@ -53,13 +55,13 @@ impl<S: Service> Client<S> {
     }
 
     fn spawn_handler(
-        service: Arc<S>,
+        service: Arc<HandlerService<S>>,
         nodes: Arc<ServiceNodes<S>>,
         mut rx: mpsc::Receiver<ChannelTransferType>,
     ) {
         tokio::spawn(async move {
             while let Some((node_id, key, request)) = rx.recv().await {
-                let response = service.process(request).await;
+                let response = service.handle(request).await;
                 nodes.node(node_id).add_with_key(key, response);
             }
         });
