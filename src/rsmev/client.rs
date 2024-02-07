@@ -50,6 +50,7 @@ impl<S: Service> Client<S> {
             .map(|(id, result)| (id.clone(), result.clone()))
     }
 
+    // TODO: remove files after confirm
     pub async fn confirm_task(&self, node_id: Option<NodeId>, task_id: &QueueKey) {
         self.nodes.node(node_id).confirm(task_id);
     }
