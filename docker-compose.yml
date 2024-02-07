@@ -1,0 +1,12 @@
+services:
+  rsmev_ftp_server:
+    container_name: rsmev_ftp_server
+    environment:
+      - FTP_PASS=12345678
+      - FTP_USER=admin
+    image: garethflowers/ftp-server
+    ports:
+      - '20-21:20-21/tcp'
+      - '40000-40009:40000-40009/tcp'
+    volumes:
+      - './ftp_data:/home/admin'
