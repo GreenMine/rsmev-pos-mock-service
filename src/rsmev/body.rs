@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct File {
-    name: String,
-    url: String,
+    pub name: String,
+    pub url: String,
     #[serde(rename = "signaturePKCS7")]
-    signature: Option<String>,
+    pub signature: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

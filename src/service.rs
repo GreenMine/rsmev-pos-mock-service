@@ -1,10 +1,10 @@
-use std::fs::File;
 use std::future::Future;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Message<C> {
     pub content: C,
-    pub files: Vec<File>,
+    pub files: Vec<PathBuf>,
 }
 
 // TODO: maybe just add a associated type Response(which may be a result, if it can be failed)
