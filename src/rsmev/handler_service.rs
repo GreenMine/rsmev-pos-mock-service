@@ -9,7 +9,7 @@ pub struct HandlerService<S> {
     service: S,
 }
 
-const BASE_FILE_DIR: &'static str = "/ftp_data";
+const BASE_FILE_DIR: &'static str = "./ftp_data";
 
 impl<S: Service> HandlerService<S> {
     pub fn new(service: S) -> Self {

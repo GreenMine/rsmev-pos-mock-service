@@ -1,11 +1,14 @@
 use std::{
     convert::Infallible,
+    io::Write,
+    path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
 use crate::service::{Message, Service};
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 pub struct Pos {
     i: AtomicUsize,
@@ -55,12 +58,21 @@ impl Service for Pos {
 
         println!("Content: {:?}", content);
 
+        let mut file_path = PathBuf::new();
+        file_path.push("/tmp");
+        file_path.push(format!("{}.txt", Uuid::new_v4()));
+
+        {
+            let mut file = std::fs::File::create(&file_path).unwrap();
+            file.write(b"hello, from pos!").unwrap();
+        }
+
         Ok(Message {
             content: PosResponse {
                 response: "ALL FINE".to_string(),
                 status: 200,
             },
-            files: Vec::new(),
+            files: vec![file_path],
         })
     }
 }
