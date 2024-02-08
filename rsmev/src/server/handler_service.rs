@@ -16,7 +16,7 @@ impl<S: Service> HandlerService<S> {
         Self { service }
     }
 
-    pub async fn handle(&self, body: RsmevBody) -> crate::rsmev::Result<S> {
+    pub async fn handle(&self, body: RsmevBody) -> crate::server::Result<S> {
         let content = Self::to_message(body);
 
         let response = self.service.handle(content).await;

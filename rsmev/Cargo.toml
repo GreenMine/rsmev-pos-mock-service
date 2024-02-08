@@ -1,0 +1,23 @@
+[package]
+name = "rsmev"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = "0.7.4"
+base64 = "0.21.7"
+bytes = "1.5.0"
+dashmap = "5.5.3"
+quick-xml = { version = "0.31.0", features = ["serde", "serialize"] }
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
+tokio = { version = "1.35.1", features = ["full"] }
+tracing = "0.1.40"
+uuid = { version = "1.7.0", features = ["v4", "serde"] }
+
+http-body-util = { version = "0.1.0", optional = true }
+
+[features]
+tracing_requests = ["dep:http-body-util"]

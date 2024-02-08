@@ -1,18 +1,13 @@
-use std::{
-    convert::Infallible,
-    io::Write,
-    path::PathBuf,
-    sync::atomic::{AtomicUsize, Ordering},
-};
+use std::convert::Infallible;
 
-use crate::service::{Message, Service};
+use rsmev::service::{Message, Service};
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-pub struct Pos {}
+pub struct PosMock {}
 
-impl Pos {
+impl PosMock {
     pub const fn new() -> Self {
         Self {}
     }
@@ -44,7 +39,7 @@ pub struct PosResponse {
     status: i32,
 }
 
-impl Service for Pos {
+impl Service for PosMock {
     type Request = PosEdmsRequest;
     type Response = PosResponse;
     type Error = Infallible;

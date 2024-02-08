@@ -3,7 +3,7 @@ use std::sync::Arc;
 use super::body::Body;
 use super::handler_service::HandlerService;
 use crate::confirm_queue::{ConfirmQueue, KeyGenerator, UuidKey};
-use crate::rsmev::Result;
+use crate::server::Result;
 use crate::service::Service;
 
 use dashmap::DashMap;

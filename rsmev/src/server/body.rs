@@ -32,11 +32,17 @@ impl EncodedXml {
 
     pub fn deserialize<'de, T: Deserialize<'de>>(&self) -> Result<T, Error> {
         let decoded = BASE64_STANDARD.decode(&self.content).map_err(|_| Error)?;
+        println!("XML: {}", unsafe {
+            std::str::from_utf8_unchecked(&decoded)
+        });
         let cursor = std::io::Cursor::new(decoded);
 
         let mut deserializer = quick_xml::de::Deserializer::from_reader(cursor);
 
-        T::deserialize(&mut deserializer).map_err(|_| Error)
+        T::deserialize(&mut deserializer).map_err(|e| {
+            tracing::error!(err = ?e);
+            Error
+        })
     }
 
     pub fn serialize<T: Serialize>(content: &T) -> Result<Self, Error> {
