@@ -1,22 +1,6 @@
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+mod requests;
+mod responses;
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct PosEdmsRequest {
-    #[serde(rename = "$value")]
-    request: PosEdmsRequestTypes,
-}
+pub use requests::*;
+pub use responses::*;
 
-#[derive(Debug, Deserialize, Clone)]
-pub enum PosEdmsRequestTypes {
-    AppealListRequest(#[serde(rename = "$value")] AppealListRequest),
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct AppealListRequest {
-    #[serde(rename = "ClientId")]
-    client_id: Uuid,
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub struct PosEdmsResponse {}
