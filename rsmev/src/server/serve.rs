@@ -62,6 +62,7 @@ mod middleware {
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response())?
             .to_bytes();
 
+        tracing::debug!(method = ?parts.method, uri = ?parts.uri);
         do_thing_with_request_body(bytes.clone());
 
         Ok(Request::from_parts(parts, Body::from(bytes)))
@@ -69,10 +70,6 @@ mod middleware {
 
     fn do_thing_with_request_body(bytes: Bytes) {
         tracing::debug!(body = ?bytes);
-    }
-
-    async fn handler(BufferRequestBody(body): BufferRequestBody) {
-        tracing::debug!(?body, "handler received body");
     }
 
     // extractor that shows how to consume the request body upfront
