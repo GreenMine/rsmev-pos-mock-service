@@ -12,6 +12,7 @@ pub struct File {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Body {
     pub xml: EncodedXml,
+    #[serde(default)]
     pub files: Vec<File>,
 }
 
