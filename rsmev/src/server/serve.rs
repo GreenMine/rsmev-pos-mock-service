@@ -24,7 +24,7 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
 
     let routes = Router::new().nest("/api/smev/:entrypoint_id", rsmev_routes);
     #[cfg(feature = "tracing_requests")]
-    let router = router.layer(axum::middleware::from_fn(middleware::print_request_body));
+    let routes = routes.layer(axum::middleware::from_fn(middleware::print_request_body));
 
     axum::serve(listener, routes).await
 }
