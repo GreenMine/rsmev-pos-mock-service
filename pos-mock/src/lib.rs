@@ -1,9 +1,9 @@
+mod types;
+
 use std::convert::Infallible;
 
 use rsmev::service::{Message, Service};
-
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use types::{PosEdmsRequest, PosEdmsResponse};
 
 pub struct PosMock {}
 
@@ -13,35 +13,9 @@ impl PosMock {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct PosEdmsRequest {
-    #[serde(rename = "$value")]
-    request: PosEdmsRequestTypes,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub enum PosEdmsRequestTypes {
-    AppealListRequest(#[serde(rename = "$value")] AppealListRequest),
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct AppealListRequest {
-    #[serde(rename = "ClientId")]
-    client_id: Uuid,
-}
-
-#[derive(Serialize, Clone)]
-pub struct PosResponse {
-    #[serde(rename = "$text")]
-    response: String,
-
-    #[serde(rename = "@status")]
-    status: i32,
-}
-
 impl Service for PosMock {
     type Request = PosEdmsRequest;
-    type Response = PosResponse;
+    type Response = PosEdmsResponse;
     type Error = Infallible;
 
     async fn handle(
@@ -51,10 +25,7 @@ impl Service for PosMock {
         println!("Content: {:?}", content);
 
         Ok(Message {
-            content: PosResponse {
-                response: "ALL FINE".to_string(),
-                status: 200,
-            },
+            content: PosEdmsResponse {},
             files: Vec::new(),
         })
     }
