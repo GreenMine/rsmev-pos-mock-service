@@ -5,6 +5,7 @@ use crate::service::Service;
 
 use axum::{
     extract::{Path, State},
+    http::StatusCode,
     routing::post,
     Json, Router,
 };
@@ -65,15 +66,20 @@ async fn get_response<S: Service>(
     State(state): RsmevState<S>,
     Path(entrypoint_id): Path<Uuid>,
     HeaderNodeId(node_id): HeaderNodeId,
-) -> Json<GetResponse> {
-    let (request_id, body) = state.pop_task(entrypoint_id, node_id).await.unwrap();
-
-    Json(GetResponse {
-        rec_id: request_id,
-        request_id,
-        message_id: Uuid::new_v4(),
-        body: body.unwrap(),
-    })
+) -> (StatusCode, Json<Option<GetResponse>>) {
+    if let Some((request_id, body)) = state.pop_task(entrypoint_id, node_id).await {
+        (
+            StatusCode::OK,
+            Json(Some(GetResponse {
+                rec_id: request_id,
+                request_id,
+                message_id: Uuid::new_v4(),
+                body: body.unwrap(),
+            })),
+        )
+    } else {
+        (StatusCode::NOT_FOUND, Json(None))
+    }
 }
 
 async fn confirm_request<S: Service>(
