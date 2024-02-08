@@ -5,7 +5,7 @@ use crate::service::Service;
 
 use axum::{
     extract::{Path, State},
-    routing::get,
+    routing::post,
     Json, Router,
 };
 use dashmap::DashMap;
@@ -16,9 +16,9 @@ pub async fn serve<S: Service>(listener: TcpListener, service: S) -> Result<(), 
     let state = Arc::new(Rsmev::new(service));
 
     let rsmev_routes = Router::new()
-        .route("/send", get(send_request))
-        .route("/get", get(get_response))
-        .route("/confirm/:request_id", get(confirm_request))
+        .route("/sendrequest", post(send_request))
+        .route("/getresponse", post(get_response))
+        .route("/confirmprocessing/:request_id", post(confirm_request))
         .with_state(state);
 
     let routes = Router::new().nest("/api/smev/:entrypoint_id", rsmev_routes);
