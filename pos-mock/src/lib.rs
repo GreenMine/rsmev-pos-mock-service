@@ -1,7 +1,9 @@
+mod appeal;
 mod db;
 mod error;
 mod types;
 
+use appeal::AppealService;
 use rsmev::service::{Message, Service};
 use types::{PosEdmsRequest, PosEdmsRequestTypes, PosEdmsResponse, PosEdmsResponseTypes};
 
