@@ -10,3 +10,22 @@ services:
       - '40000-40009:40000-40009/tcp'
     volumes:
       - './ftp_data:/home/admin'
+  db:
+   image: postgres:12.0
+   container_name: postgres
+   restart: always
+   environment:
+       - POSTGRES_DB=rsmev_pos_mock
+       - POSTGRES_USER=localuser
+       - POSTGRES_PASSWORD=localpassword
+       - PGDATA=/data/postgres
+   volumes:
+       - ./pg_data:/data/postgres
+   ports:
+       - 5432:5432
+   networks:
+     - app-network
+
+networks:
+    app-network:
+        driver: bridge
