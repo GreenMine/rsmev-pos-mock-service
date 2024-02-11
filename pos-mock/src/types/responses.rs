@@ -17,59 +17,59 @@ pub enum PosEdmsResponseTypes {
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AppealListResponse {
-    pub(crate) status: AppealListResponseStatus,
-    pub(crate) appeals: Vec<Appeal>,
-    pub(crate) count: usize,
+    pub status: AppealListResponseStatus,
+    pub appeals: Vec<Appeal>,
+    pub count: usize,
 }
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AppealListResponseStatus {
-    pub(crate) operation_result: String,
-    pub(crate) description: Option<String>,
+    pub operation_result: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Appeal {
-    pub(crate) id: u64,
-    pub(crate) description: String,
-    pub(crate) subject_id: u64,
-    pub(crate) subject_name: String,
-    pub(crate) subsubject_id: u64,
-    pub(crate) subsubject_name: String,
-    pub(crate) fact_name: String,
-    pub(crate) answer_at: DateTime,
-    pub(crate) fast_track: bool,
-    pub(crate) created_at: DateTime,
-    pub(crate) region_id: Uuid,
-    pub(crate) region_name: String,
-    pub(crate) address: String,
-    pub(crate) opa_id: u64,
-    pub(crate) opa_name: String,
-    pub(crate) shared: bool,
-    pub(crate) applicant: AppealApplicant,
-    pub(crate) attachments: Vec<File>,
-    pub(crate) coordinates: String,
-    pub(crate) confidential: bool,
-    pub(crate) work_log: Uuid,
+    pub id: u64,
+    pub description: String,
+    pub subject_id: u64,
+    pub subject_name: String,
+    pub subsubject_id: u64,
+    pub subsubject_name: String,
+    pub fact_name: String,
+    pub answer_at: DateTime,
+    pub fast_track: bool,
+    pub created_at: DateTime,
+    pub region_id: Uuid,
+    pub region_name: String,
+    pub address: String,
+    pub opa_id: u64,
+    pub opa_name: String,
+    pub shared: bool,
+    pub applicant: AppealApplicant,
+    pub attachments: Vec<File>,
+    pub coordinates: String,
+    pub confidential: bool,
+    pub work_log: Uuid,
 }
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct File {
-    pub(crate) file_id: Uuid,
+    pub file_id: Uuid,
 }
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AppealApplicant {
-    pub(crate) surname: String,
-    pub(crate) name: String,
-    pub(crate) patronymic: String,
-    pub(crate) email: String,
-    pub(crate) phone: String,
-    pub(crate) post_address: String,
-    pub(crate) send_with_russia_post: bool,
-    pub(crate) post_address_flat: String,
+    pub surname: String,
+    pub name: String,
+    pub patronymic: String,
+    pub email: String,
+    pub phone: String,
+    pub post_address: String,
+    pub send_with_russia_post: bool,
+    pub post_address_flat: String,
 }
