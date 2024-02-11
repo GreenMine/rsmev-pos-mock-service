@@ -1,5 +1,8 @@
 // TODO: maybe move it to rsmev_service library
 
+// TODO: Using tower library is ideomatic variant for service
+// @see https://docs.rs/tower/latest/tower/
+
 use std::future::Future;
 use std::path::PathBuf;
 

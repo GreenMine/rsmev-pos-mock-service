@@ -48,30 +48,8 @@ impl EncodedXml {
     pub fn serialize<T: Serialize>(content: &T) -> Result<Self, Error> {
         let serialized = quick_xml::se::to_string(content).map_err(|_| Error)?;
 
+        println!("Serialized:\n{serialized}");
+
         Ok(Self::new(BASE64_STANDARD.encode(&serialized)))
     }
 }
-
-// impl<C: serde::de::DeserializeOwned> TryFrom<Body> for crate::service::Message<C> {
-//     // FIXME: empty error
-//     type Error = ();
-//
-//     fn try_from(value: Body) -> Result<Self, Self::Error> {
-//         Ok(Self {
-//             content: value.xml.deserialize().map_err(|_| ())?,
-//             files: Vec::new(),
-//         })
-//     }
-// }
-//
-// impl<C: serde::Serialize> TryFrom<crate::service::Message<C>> for Body {
-//     // FIXME: empty error
-//     type Error = ();
-//
-//     fn try_from(value: crate::service::Message<C>) -> Result<Self, Self::Error> {
-//         Ok(Self {
-//             xml: EncodedXml::serialize(&value.content).map_err(|_| ())?,
-//             files: Vec::new(),
-//         })
-//     }
-// }
