@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
-use crate::db::{appeal::Appeal, AppealRepo};
+use crate::db::{appeal::Appeal as DbAppeal, AppealRepo};
+use crate::types::Appeal;
 use dashmap::DashMap;
 use tokio::time::Duration;
 use tokio::time::Instant;
@@ -29,6 +30,7 @@ impl AppealService {
         let stat = repo.get_appeals_stat().await.unwrap();
         let max = stat.iter().map(|(_, a)| *a).max().unwrap();
 
+        let now = Instant::now();
         stat.into_iter()
             .map(|(uuid, amount)| {
                 let uuid = uuid::Uuid::from_str(&uuid).expect("valid uuid");
@@ -37,7 +39,7 @@ impl AppealService {
                 let message_duration = BASE_APPEAL_DIFF_TIME as f32 * coef;
                 let message_duration = Duration::from_millis(message_duration as u64);
 
-                (uuid, (Instant::now(), message_duration))
+                (uuid, (now, message_duration))
             })
             .collect::<DashMap<_, _>>()
     }
@@ -48,6 +50,7 @@ impl AppealService {
                 .get_pending_appeal(client_id.to_string())
                 .await
                 .ok()
+                .and_then(|v| Self::convert_db_appeal(v).ok())
         } else {
             None
         }
@@ -68,5 +71,32 @@ impl AppealService {
             }
             Entry::Vacant(_) => false,
         }
+    }
+
+    fn convert_db_appeal(appeal: DbAppeal) -> Result<Appeal, ()> {
+        Ok(Appeal {
+            id: appeal["id"],
+            description: todo!(),
+            subject_id: todo!(),
+            subject_name: todo!(),
+            subsubject_id: todo!(),
+            subsubject_name: todo!(),
+            fact_name: todo!(),
+            answer_at: todo!(),
+            fast_track: todo!(),
+            created_at: todo!(),
+            region_id: todo!(),
+            region_name: todo!(),
+            address: todo!(),
+            opa_id: todo!(),
+            opa_name: todo!(),
+            shared: todo!(),
+            applicant: todo!(),
+            attachments: todo!(),
+            coordinates: todo!(),
+            confidential: todo!(),
+            work_log: todo!(),
+        });
+        unimplemented!()
     }
 }
