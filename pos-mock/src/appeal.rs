@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 pub struct AppealService {
     repo: AppealRepo,
-    popularity_map: DashMap<uuid::Uuid, (Instant, f32)>,
+    popularity_map: DashMap<uuid::Uuid, (Instant, Duration)>,
 }
 
 const BASE_APPEAL_DIFF_TIME: usize = 10000;
@@ -23,7 +23,9 @@ impl AppealService {
         }
     }
 
-    async fn calculate_popularity_map(repo: &AppealRepo) -> DashMap<uuid::Uuid, (Instant, f32)> {
+    async fn calculate_popularity_map(
+        repo: &AppealRepo,
+    ) -> DashMap<uuid::Uuid, (Instant, Duration)> {
         let stat = repo.get_appeals_stat().await.unwrap();
         let max = stat.iter().map(|(_, a)| *a).max().unwrap();
 
@@ -32,7 +34,10 @@ impl AppealService {
                 let uuid = uuid::Uuid::from_str(&uuid).expect("valid uuid");
                 let coef = max as f32 / amount as f32;
 
-                (uuid, (Instant::now(), coef))
+                let message_duration = BASE_APPEAL_DIFF_TIME as f32 * coef;
+                let message_duration = Duration::from_millis(message_duration as u64);
+
+                (uuid, (Instant::now(), message_duration))
             })
             .collect::<DashMap<_, _>>()
     }
@@ -52,11 +57,9 @@ impl AppealService {
         use dashmap::mapref::entry::Entry;
         match self.popularity_map.entry(client_id) {
             Entry::Occupied(mut entry) => {
-                let (now, coef) = entry.get_mut();
+                let (now, duration) = entry.get_mut();
 
-                let must_diff = BASE_APPEAL_DIFF_TIME as f32 * (*coef);
-                let must_diff = Duration::from_millis(must_diff as u64);
-                if now.elapsed() > must_diff {
+                if now.elapsed() > *duration {
                     *now = Instant::now();
                     true
                 } else {
