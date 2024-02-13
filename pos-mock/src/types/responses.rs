@@ -31,7 +31,7 @@ pub struct AppealListResponseStatus {
 
 #[derive(Debug, Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
-pub struct Appeal<Attachment = File> {
+pub struct Appeal {
     pub id: u64,
     pub description: String,
     pub subject_id: u64,
@@ -49,7 +49,7 @@ pub struct Appeal<Attachment = File> {
     pub opa_name: String,
     pub shared: bool,
     pub applicant: AppealApplicant,
-    pub attachments: Vec<Attachment>,
+    pub attachments: Vec<File>,
     pub coordinates: String,
     #[serde(default)]
     pub confidential: bool,
@@ -74,4 +74,36 @@ pub struct AppealApplicant {
     pub send_with_russia_post: bool,
     #[serde(default)]
     pub post_address_flat: String,
+}
+
+impl TryFrom<crate::db::Appeal> for Appeal {
+    type Error = ();
+
+    fn try_from(value: crate::db::Appeal) -> Result<Self, Self::Error> {
+        fn new_object_value_case(value: serde_json::Value) -> serde_json::Value {
+            fn change_first_symbol_case(str: &mut String) {
+                // SAFETY: only ascii symbols can be provided in Object
+                unsafe {
+                    let bytes = str.as_bytes_mut();
+                    bytes[0] = bytes[0].to_ascii_uppercase();
+                }
+            }
+
+            if let serde_json::Value::Object(obj) = value {
+                let mut map = serde_json::Map::with_capacity(obj.len());
+                for (mut key, value) in obj.into_iter() {
+                    change_first_symbol_case(&mut key);
+                    map.insert(key, new_object_value_case(value));
+                }
+
+                return serde_json::Value::Object(map);
+            }
+            return value;
+        }
+
+        let content = value.content.unwrap();
+        let content = new_object_value_case(content);
+
+        serde_json::from_value::<Appeal>(content).map_err(|_| ())
+    }
 }

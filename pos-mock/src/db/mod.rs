@@ -1,3 +1,3 @@
 pub mod appeal;
 
-pub use appeal::AppealRepo;
+pub use appeal::{Appeal, AppealRepo};

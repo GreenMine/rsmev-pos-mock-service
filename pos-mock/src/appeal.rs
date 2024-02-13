@@ -50,7 +50,7 @@ impl AppealService {
                 .get_pending_appeal(client_id.to_string())
                 .await
                 .ok()
-                .and_then(|v| Self::convert_db_appeal(v).ok())
+                .and_then(|v| v.try_into().ok())
         } else {
             None
         }
@@ -71,33 +71,5 @@ impl AppealService {
             }
             Entry::Vacant(_) => false,
         }
-    }
-
-    fn convert_db_appeal(appeal: DbAppeal) -> Result<Appeal, ()> {
-        let content = appeal.content.unwrap();
-        let content = Self::new_object_value_case(content);
-
-        serde_json::from_value::<Appeal<String>>(content).map_err(|_| ())
-    }
-
-    fn new_object_value_case(value: serde_json::Value) -> serde_json::Value {
-        fn change_first_symbol_case(str: &mut String) {
-            // SAFETY: only ascii symbols can be provided in Object
-            unsafe {
-                let bytes = str.as_bytes_mut();
-                bytes[0] = bytes[0].to_ascii_uppercase();
-            }
-        }
-
-        if let serde_json::Value::Object(obj) = value {
-            let mut map = serde_json::Map::with_capacity(obj.len());
-            for (mut key, value) in obj.into_iter() {
-                change_first_symbol_case(&mut key);
-                map.insert(key, Self::new_object_value_case(value));
-            }
-
-            return serde_json::Value::Object(map);
-        }
-        return value;
     }
 }
