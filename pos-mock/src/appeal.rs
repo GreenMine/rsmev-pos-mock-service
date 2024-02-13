@@ -50,7 +50,14 @@ impl AppealService {
                 .get_pending_appeal(client_id.to_string())
                 .await
                 .ok()
-                .and_then(|v| v.try_into().ok())
+                .and_then(|v| match v.try_into() {
+                    Ok(a) => Some(a),
+                    Err(e) => {
+                        tracing::error!(error = ?e);
+                        println!("Error: {e:?}");
+                        None
+                    }
+                })
         } else {
             None
         }

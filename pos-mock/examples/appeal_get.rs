@@ -16,7 +16,7 @@ async fn main() {
         files: Vec::new(),
     };
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(2)).await;
     let result = pos.handle(content).await.unwrap();
     println!("Result: {:?}", result);
 }

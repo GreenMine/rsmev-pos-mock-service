@@ -49,6 +49,7 @@ pub struct Appeal {
     pub opa_name: String,
     pub shared: bool,
     pub applicant: AppealApplicant,
+    #[serde(default)]
     pub attachments: Vec<File>,
     pub coordinates: String,
     #[serde(default)]
@@ -77,9 +78,17 @@ pub struct AppealApplicant {
 }
 
 impl TryFrom<crate::db::Appeal> for Appeal {
-    type Error = ();
+    type Error = serde_json::Error;
 
     fn try_from(value: crate::db::Appeal) -> Result<Self, Self::Error> {
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "snake_case")]
+        struct AppealTranslation {
+            #[serde(rename = "Attachments")]
+            attachments: Vec<String>,
+            #[serde(flatten)]
+            appeal: Appeal,
+        }
         fn new_object_value_case(value: serde_json::Value) -> serde_json::Value {
             fn change_first_symbol_case(str: &mut String) {
                 // SAFETY: only ascii symbols can be provided in Object
@@ -103,7 +112,25 @@ impl TryFrom<crate::db::Appeal> for Appeal {
 
         let content = value.content.unwrap();
         let content = new_object_value_case(content);
+        let translation = serde_json::from_value::<AppealTranslation>(content).unwrap();
 
-        serde_json::from_value::<Appeal>(content).map_err(|_| ())
+        let AppealTranslation {
+            attachments,
+            mut appeal,
+        } = translation;
+
+        appeal.attachments = attachments
+            .into_iter()
+            .map(|url| {
+                use std::str::FromStr;
+
+                let str_uuid = url.split('/').rev().next().unwrap();
+                File {
+                    file_id: uuid::Uuid::from_str(str_uuid).unwrap(),
+                }
+            })
+            .collect();
+
+        Ok(appeal)
     }
 }
