@@ -83,10 +83,10 @@ impl TryFrom<crate::db::Appeal> for Appeal {
         fn new_object_value_case(value: serde_json::Value) -> serde_json::Value {
             fn change_first_symbol_case(str: &mut String) {
                 // SAFETY: only ascii symbols can be provided in Object
-                unsafe {
-                    let bytes = str.as_bytes_mut();
-                    bytes[0] = bytes[0].to_ascii_uppercase();
-                }
+                let bytes = unsafe { str.as_bytes_mut() };
+
+                assert!(bytes[0].is_ascii());
+                bytes[0] = bytes[0].to_ascii_uppercase();
             }
 
             if let serde_json::Value::Object(obj) = value {
