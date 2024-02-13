@@ -12,7 +12,7 @@ pub struct AppealService {
     popularity_map: DashMap<uuid::Uuid, (Instant, Duration)>,
 }
 
-const BASE_APPEAL_DIFF_TIME: usize = 10000;
+const BASE_APPEAL_DIFF_TIME: usize = 1;
 
 impl AppealService {
     pub async fn new(repo: AppealRepo) -> Self {
@@ -74,29 +74,30 @@ impl AppealService {
     }
 
     fn convert_db_appeal(appeal: DbAppeal) -> Result<Appeal, ()> {
-        Ok(Appeal {
-            id: appeal["id"],
-            description: todo!(),
-            subject_id: todo!(),
-            subject_name: todo!(),
-            subsubject_id: todo!(),
-            subsubject_name: todo!(),
-            fact_name: todo!(),
-            answer_at: todo!(),
-            fast_track: todo!(),
-            created_at: todo!(),
-            region_id: todo!(),
-            region_name: todo!(),
-            address: todo!(),
-            opa_id: todo!(),
-            opa_name: todo!(),
-            shared: todo!(),
-            applicant: todo!(),
-            attachments: todo!(),
-            coordinates: todo!(),
-            confidential: todo!(),
-            work_log: todo!(),
-        });
-        unimplemented!()
+        let content = appeal.content.unwrap();
+        let content = Self::new_object_value_case(content);
+
+        serde_json::from_value::<Appeal<String>>(content).map_err(|_| ())
+    }
+
+    fn new_object_value_case(value: serde_json::Value) -> serde_json::Value {
+        fn change_first_symbol_case(str: &mut String) {
+            // SAFETY: only ascii symbols can be provided in Object
+            unsafe {
+                let bytes = str.as_bytes_mut();
+                bytes[0] = bytes[0].to_ascii_uppercase();
+            }
+        }
+
+        if let serde_json::Value::Object(obj) = value {
+            let mut map = serde_json::Map::with_capacity(obj.len());
+            for (mut key, value) in obj.into_iter() {
+                change_first_symbol_case(&mut key);
+                map.insert(key, Self::new_object_value_case(value));
+            }
+
+            return serde_json::Value::Object(map);
+        }
+        return value;
     }
 }

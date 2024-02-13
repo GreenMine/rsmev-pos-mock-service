@@ -1,7 +1,8 @@
-mod appeal;
-mod db;
-mod error;
-mod types;
+// FIXME: REMOVE PUB
+pub mod appeal;
+pub mod db;
+pub mod error;
+pub mod types;
 
 use appeal::AppealService;
 use rsmev::service::{Message, Service};

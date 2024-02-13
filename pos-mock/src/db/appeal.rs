@@ -53,10 +53,10 @@ impl AppealRepo {
 }
 
 pub struct Appeal {
-    id: i32,
-    status: AppealStatus,
-    content: Option<sqlx::types::JsonValue>,
-    client_id: Option<String>,
+    pub id: i32,
+    pub status: AppealStatus,
+    pub content: Option<sqlx::types::JsonValue>,
+    pub client_id: Option<String>,
 }
 
 pub enum AppealStatus {

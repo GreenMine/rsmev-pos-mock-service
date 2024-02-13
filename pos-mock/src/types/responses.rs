@@ -29,16 +29,16 @@ pub struct AppealListResponseStatus {
     pub description: Option<String>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
-pub struct Appeal {
+pub struct Appeal<Attachment = File> {
     pub id: u64,
     pub description: String,
     pub subject_id: u64,
     pub subject_name: String,
     pub subsubject_id: u64,
     pub subsubject_name: String,
-    pub fact_name: String,
+    pub fact_name: Option<String>,
     pub answer_at: DateTime,
     pub fast_track: bool,
     pub created_at: DateTime,
@@ -49,19 +49,20 @@ pub struct Appeal {
     pub opa_name: String,
     pub shared: bool,
     pub applicant: AppealApplicant,
-    pub attachments: Vec<File>,
+    pub attachments: Vec<Attachment>,
     pub coordinates: String,
+    #[serde(default)]
     pub confidential: bool,
-    pub work_log: Uuid,
+    pub work_log: Option<Uuid>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct File {
     pub file_id: Uuid,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AppealApplicant {
     pub surname: String,
@@ -71,5 +72,6 @@ pub struct AppealApplicant {
     pub phone: String,
     pub post_address: String,
     pub send_with_russia_post: bool,
+    #[serde(default)]
     pub post_address_flat: String,
 }
