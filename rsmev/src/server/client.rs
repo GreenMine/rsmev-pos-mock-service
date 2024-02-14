@@ -14,20 +14,18 @@ type ChannelTransferType = (Option<NodeId>, Uuid, Body);
 type Queue<T> = ConfirmQueue<T, QUEUE_TTL, UuidKey>;
 type QueueKey = Uuid;
 
-type ServiceNodes<S> = Nodes<Result<S>>;
-
 const CHANNEL_BUFFER_SIZE: usize = 256;
 const QUEUE_TTL: u64 = 1 * 10 * 1000;
 
-pub struct Client<S: Service> {
-    nodes: Arc<ServiceNodes<S>>,
+pub struct Client {
+    nodes: Arc<Nodes<Body>>,
     tx: mpsc::Sender<ChannelTransferType>,
 }
 
 const BASE_NODE_ID: &'static str = "master";
 
-impl<S: Service> Client<S> {
-    pub fn new(service: Arc<HandlerService<S>>) -> Self {
+impl Client {
+    pub fn new<S: Service>(service: Arc<HandlerService<S>>) -> Self {
         let (tx, rx) = mpsc::channel(CHANNEL_BUFFER_SIZE);
         let nodes = Arc::new(Nodes::new());
 
@@ -43,7 +41,7 @@ impl<S: Service> Client<S> {
         key
     }
 
-    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<(Uuid, Result<S>)> {
+    pub async fn pop_task(&self, node_id: Option<NodeId>) -> Option<(QueueKey, Body)> {
         self.nodes
             .node(node_id)
             .take()
@@ -55,9 +53,9 @@ impl<S: Service> Client<S> {
         self.nodes.node(node_id).confirm(task_id);
     }
 
-    fn spawn_handler(
+    fn spawn_handler<S: Service>(
         service: Arc<HandlerService<S>>,
-        nodes: Arc<ServiceNodes<S>>,
+        nodes: Arc<Nodes<Body>>,
         mut rx: mpsc::Receiver<ChannelTransferType>,
     ) {
         tokio::spawn(async move {

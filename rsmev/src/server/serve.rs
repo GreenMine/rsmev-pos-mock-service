@@ -143,7 +143,7 @@ async fn get_response<S: Service>(
                 rec_id: request_id,
                 request_id,
                 message_id: Uuid::new_v4(),
-                body: body.unwrap(),
+                body,
             })),
         )
     } else {
@@ -161,7 +161,7 @@ async fn confirm_request<S: Service>(
 
 struct Rsmev<S: Service> {
     service: Arc<HandlerService<S>>,
-    clients: DashMap<Uuid, Client<S>>,
+    clients: DashMap<Uuid, Client>,
 }
 
 impl<S: Service> Rsmev<S> {
@@ -187,7 +187,7 @@ impl<S: Service> Rsmev<S> {
         &self,
         entrypoint_id: Uuid,
         node_id: Option<String>,
-    ) -> Option<(Uuid, crate::server::Result<S>)> {
+    ) -> Option<(Uuid, Body)> {
         self.get_client(entrypoint_id).pop_task(node_id).await
     }
 
@@ -205,7 +205,7 @@ impl<S: Service> Rsmev<S> {
     pub fn get_client(
         &self,
         entrypoint_id: Uuid,
-    ) -> dashmap::mapref::one::RefMut<'_, Uuid, Client<S>> {
+    ) -> dashmap::mapref::one::RefMut<'_, Uuid, Client> {
         self.clients
             .entry(entrypoint_id)
             .or_insert(Client::new(self.service.clone()))
