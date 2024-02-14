@@ -89,7 +89,7 @@ impl TryFrom<crate::db::Appeal> for Appeal {
             appeal: Appeal,
         }
         fn new_object_value_case(value: serde_json::Value) -> serde_json::Value {
-            fn change_first_symbol_case(str: &mut String) {
+            fn change_first_symbol_case(str: &mut str) {
                 // SAFETY: only ascii symbols can be provided in Object
                 let bytes = unsafe { str.as_bytes_mut() };
 
@@ -106,7 +106,7 @@ impl TryFrom<crate::db::Appeal> for Appeal {
 
                 return serde_json::Value::Object(map);
             }
-            return value;
+            value
         }
 
         let content = value.content.unwrap();
@@ -123,7 +123,7 @@ impl TryFrom<crate::db::Appeal> for Appeal {
             .map(|url| {
                 use std::str::FromStr;
 
-                let str_uuid = url.split('/').rev().next().unwrap();
+                let str_uuid = url.split('/').next_back().unwrap();
                 File {
                     file_id: uuid::Uuid::from_str(str_uuid).unwrap(),
                 }

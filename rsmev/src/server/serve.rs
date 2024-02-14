@@ -155,7 +155,7 @@ async fn confirm_request<S: Service>(
     State(state): RsmevState<S>,
     Path((entrypoint_id, request_id)): Path<(Uuid, Uuid)>,
     HeaderNodeId(node_id): HeaderNodeId,
-) -> () {
+) {
     state.confirm_task(entrypoint_id, node_id, request_id).await;
 }
 

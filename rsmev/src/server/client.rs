@@ -21,7 +21,7 @@ pub struct Client {
     tx: mpsc::Sender<ChannelTransferType>,
 }
 
-const BASE_NODE_ID: &'static str = "master";
+const BASE_NODE_ID: &str = "master";
 
 impl Client {
     pub fn new<S: Service>(service: Arc<HandlerService<S>>) -> Self {
@@ -35,7 +35,7 @@ impl Client {
     pub async fn push_task(&self, node_id: Option<NodeId>, body: Body) -> QueueKey {
         let key = UuidKey::generate();
         // TODO: throw the error up
-        let _ = self.tx.send((node_id, key.clone(), body)).await;
+        let _ = self.tx.send((node_id, key, body)).await;
 
         key
     }
@@ -44,7 +44,7 @@ impl Client {
         self.nodes
             .node(node_id)
             .take()
-            .map(|(id, result)| (id.clone(), result.clone()))
+            .map(|(id, result)| (*id, result.clone()))
     }
 
     // TODO: remove files after confirm

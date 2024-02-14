@@ -4,7 +4,7 @@ use axum::{
     http::{request::Parts, StatusCode},
 };
 
-const NODE_ID_HEADER_NAME: &'static str = "node_id";
+const NODE_ID_HEADER_NAME: &str = "node_id";
 pub struct HeaderNodeId(pub Option<String>);
 
 #[async_trait]

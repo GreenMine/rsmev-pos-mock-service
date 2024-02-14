@@ -1,6 +1,5 @@
 use sqlx::{PgPool, Result};
 use std::sync::Arc;
-use uuid::Uuid;
 
 pub struct AppealRepo {
     pool: Arc<PgPool>,

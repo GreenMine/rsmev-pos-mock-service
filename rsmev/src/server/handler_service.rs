@@ -9,7 +9,7 @@ pub struct HandlerService<S> {
     service: S,
 }
 
-const BASE_FILE_DIR: &'static str = "./ftp_data";
+const BASE_FILE_DIR: &str = "./ftp_data";
 
 impl<S: Service> HandlerService<S> {
     pub fn new(service: S) -> Self {
@@ -36,7 +36,7 @@ impl<S: Service> HandlerService<S> {
                 file_path.push(BASE_FILE_DIR);
                 file_path.push(f.url);
 
-                if let Ok(_) = std::fs::metadata(&file_path) {
+                if std::fs::metadata(&file_path).is_ok() {
                     Ok(file_path)
                 } else {
                     Err(())
