@@ -82,7 +82,6 @@ impl TryFrom<crate::db::Appeal> for Appeal {
 
     fn try_from(value: crate::db::Appeal) -> Result<Self, Self::Error> {
         #[derive(serde::Deserialize)]
-        #[serde(rename_all = "snake_case")]
         struct AppealTranslation {
             #[serde(rename = "Attachments")]
             attachments: Vec<String>,

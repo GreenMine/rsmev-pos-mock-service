@@ -50,6 +50,19 @@ impl AppealRepo {
 
         Ok(records)
     }
+
+    pub async fn update_status(&self, appeal_id: i32, status: AppealStatus) -> Result<()> {
+        sqlx::query!(
+            r#"
+                UPDATE appeals a SET status = $1 WHERE a.id = $2
+            "#r,
+            String::from(status),
+            appeal_id
+        )
+        .execute(&*self.pool)
+        .await
+        .map(|_| ())
+    }
 }
 
 pub struct Appeal {
